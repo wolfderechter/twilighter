@@ -1,0 +1,13 @@
+{
+  "name": "Twilighter",
+  "version": "0.0.1",
+  "description": "todo",
+  "manifest_version": 3,
+  "icons": {
+    "32": "icon.png"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "permissions": ["activeTab", "scripting"]
+}
