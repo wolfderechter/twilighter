@@ -1,14 +1,72 @@
 const brightnessSlider = document.getElementById("brightness");
 const brightnessValue = document.getElementById("brightnessValue");
-brightnessValue.textContent = brightnessSlider.value;
+const volumeSlider = document.getElementById("volume");
+const volumeValue = document.getElementById("volumeValue");
 
-brightnessSlider.addEventListener("input", updateBrightness);
+document.addEventListener("DOMContentLoaded", async () => {
+  // Get the active tab ID
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  const tabId = tab.id;
 
-async function updateBrightness(event) {
-  const brightness = event.target.value;
-  brightnessValue.textContent = brightness;
+  // Load the saved brightness and volume values for this tab
+  chrome.storage.local.get(
+    [`brightness_${tabId}`, `volume_${tabId}`],
+    (result) => {
+      const savedBrightness = result[`brightness_${tabId}`];
+      const savedVolume = result[`volume_${tabId}`];
 
-  let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      // Set brightness slider and value
+      if (savedBrightness !== undefined) {
+        brightnessSlider.value = savedBrightness * 100; // Convert to percentage for the slider
+        brightnessValue.textContent = brightnessSlider.value;
+        updateBrightness(savedBrightness);
+      } else {
+        brightnessValue.textContent = brightnessSlider.value; // use the default slider value if no savedBrightness found
+      }
+      // Set volume slider and value
+      if (savedVolume !== undefined) {
+        volumeSlider.value = savedVolume * 100; // Convert to percentage for the slider
+        volumeValue.textContent = volumeSlider.value;
+        updateVolume(savedVolume);
+      } else {
+        volumeValue.textContent = volumeSlider.value; // use the default slider value if no savedVolume found
+      }
+    },
+  );
+});
+
+brightnessSlider.addEventListener("input", async (event) => {
+  const brightness = event.target.value / 100;
+  brightnessValue.textContent = event.target.value;
+
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  const tabId = tab.id;
+
+  // Save the volume value for this tab in localstorage
+  chrome.storage.local.set({ [`brightness_${tabId}`]: brightness });
+
+  updateBrightness(brightness);
+});
+
+volumeSlider.addEventListener("input", async (event) => {
+  const volume = event.target.value / 100;
+  volumeValue.textContent = event.target.value;
+
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  const tabId = tab.id;
+
+  // Save the volume value for this tab in localstorage
+  chrome.storage.local.set({ [`volume_${tabId}`]: volume });
+
+  updateVolume(volume);
+});
+
+/**
+ * Function to update the brightness of a specific tab
+ * @param brightness - the brightness value for the whole tab
+ */
+async function updateBrightness(brightness) {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
   await chrome.scripting.executeScript({
     target: { tabId: tab.id },
@@ -17,8 +75,7 @@ async function updateBrightness(event) {
       // TODO: what should we dim?
       // a) the whole screen
       const rootElement = document.documentElement;
-      if (rootElement)
-        rootElement.style.filter = `brightness(${brightness / 100})`;
+      if (rootElement) rootElement.style.filter = `brightness(${brightness})`;
 
       // b) all the 'video' elements on a page
       // const mediaElements = document.querySelectorAll("video");
@@ -36,17 +93,13 @@ async function updateBrightness(event) {
     },
   });
 }
-const volumeSlider = document.getElementById("volume");
-const volumeValue = document.getElementById("volumeValue");
-volumeValue.textContent = volumeSlider.value;
 
-volumeSlider.addEventListener("input", updateVolume);
-
-async function updateVolume(event) {
-  const volume = event.target.value;
-  volumeValue.textContent = volume;
-
-  let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+/**
+ * Function to update the volume for all audio and video elements inside a tab
+ * @param volume - the volume value for the audio and video elements on a page
+ */
+async function updateVolume(volume) {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
   await chrome.scripting.executeScript({
     target: { tabId: tab.id },
@@ -54,8 +107,7 @@ async function updateVolume(event) {
     func: (volume) => {
       const mediaElements = document.querySelectorAll("audio, video");
       mediaElements.forEach((element) => {
-        element.volume = volume / 100;
-        console.log(element, volume);
+        element.volume = volume;
       });
     },
   });
