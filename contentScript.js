@@ -1,6 +1,5 @@
 (function applySavedSettings() {
   const hostname = location.hostname;
-  console.log("hostname", hostname);
 
   chrome.storage.local.get(
     [`brightness_${hostname}`, `volume_${hostname}`],
