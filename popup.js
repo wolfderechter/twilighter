@@ -67,6 +67,9 @@ volumeSlider.addEventListener("input", async (event) => {
 async function updateBrightness(brightness) {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
+  // Skip if the tab is a chrome:// or file:// URL - since they are not accessible for security reasons
+  if (tab.url.startsWith("chrome://") || tab.url.startsWith("file://")) return;
+
   await chrome.scripting.executeScript({
     target: { tabId: tab.id },
     args: [brightness], // pass brightness to the function
@@ -99,6 +102,9 @@ async function updateBrightness(brightness) {
  */
 async function updateVolume(volume) {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+  // Skip if the tab is a chrome:// or file:// URL - since they are not accessible for security reasons
+  if (tab.url.startsWith("chrome://") || tab.url.startsWith("file://")) return;
 
   await chrome.scripting.executeScript({
     target: { tabId: tab.id },
