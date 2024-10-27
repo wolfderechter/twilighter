@@ -4,16 +4,15 @@ const volumeSlider = document.getElementById("volume");
 const volumeValue = document.getElementById("volumeValue");
 
 document.addEventListener("DOMContentLoaded", async () => {
-  // Get the active tab ID
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  const tabId = tab.id;
+  const hostname = new URL(tab.url).hostname;
 
   // Load the saved brightness and volume values for this tab
   chrome.storage.local.get(
-    [`brightness_${tabId}`, `volume_${tabId}`],
+    [`brightness_${hostname}`, `volume_${hostname}`],
     (result) => {
-      const savedBrightness = result[`brightness_${tabId}`];
-      const savedVolume = result[`volume_${tabId}`];
+      const savedBrightness = result[`brightness_${hostname}`];
+      const savedVolume = result[`volume_${hostname}`];
 
       // Set brightness slider and value
       if (savedBrightness !== undefined) {
@@ -40,10 +39,10 @@ brightnessSlider.addEventListener("input", async (event) => {
   brightnessValue.textContent = event.target.value;
 
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  const tabId = tab.id;
+  const hostname = new URL(tab.url).hostname;
 
   // Save the volume value for this tab in localstorage
-  chrome.storage.local.set({ [`brightness_${tabId}`]: brightness });
+  chrome.storage.local.set({ [`brightness_${hostname}`]: brightness });
 
   updateBrightness(brightness);
 });
@@ -53,10 +52,10 @@ volumeSlider.addEventListener("input", async (event) => {
   volumeValue.textContent = event.target.value;
 
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  const tabId = tab.id;
+  const hostname = new URL(tab.url).hostname;
 
   // Save the volume value for this tab in localstorage
-  chrome.storage.local.set({ [`volume_${tabId}`]: volume });
+  chrome.storage.local.set({ [`volume_${hostname}`]: volume });
 
   updateVolume(volume);
 });
